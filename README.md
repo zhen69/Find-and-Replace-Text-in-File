@@ -1,1 +1,1 @@
-# -Find-and-Replace-Text-in-File
+# Find-and-Replace-Text-in-File
