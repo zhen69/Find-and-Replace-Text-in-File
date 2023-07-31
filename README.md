@@ -8,3 +8,5 @@ Note: The input order doesn't matter for the flags listed above. However, the in
 Language Used: C
 
 Concepts: File Handling, Algorithm, and String Manipulation.
+
+<b>Contributor: Professor Kevin McDonnell at Stony Brook University (unit tests and MakeFile)</b>
