@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <limits.h>
 
-#define MAX_LINE 200
 #define MAX_SEARCH_LEN 20
 
 #define MISSING_ARGUMENT 1
@@ -16,3 +16,13 @@
 #define L_ARGUMENT_INVALID 6
 #define WILDCARD_INVALID 7
 #define DUPLICATE_ARGUMENT 8
+
+void findReplace(int mode, int *start_end_lines);
+void obtainFile(char *input, char *output);
+int checkSearchTextForW();
+int checkErrors(char *input_file, char *output_file);
+void srFlag(bool *flags, bool *argError, bool s_flag);
+void lFlag(int *start_end_lines);
+void wFlag();
+void scanArgs(const int argc, char* const* argv, int *start_end_lines);
+
