@@ -1,7 +1,8 @@
 #include "FindReplace.h"
 extern char *optarg;
 
-char *search_text, *replace_text;
+int searchLen;
+char search_text[MAX_TEXT_LEN + 1], replace_text[MAX_TEXT_LEN + 1];
 
 FILE *inputFile, *outputFile;
 
@@ -53,6 +54,8 @@ int main(int argc, char *argv[]){
 
     int error;
 
+    searchLen = strlen(search_text);
+
     if((error = checkErrors(argv[argc - 2], argv[argc - 1]))) return error;
     
     /*
@@ -63,7 +66,7 @@ int main(int argc, char *argv[]){
     mode = 2: replaces all texts with a suffix of search_text.
     */
     int mode = 0;
-    if(search_text[strlen(search_text) - 1] == '*') mode = 1;
+    if(search_text[searchLen - 1] == '*') mode = 1;
     else if(search_text[0] == '*') mode = 2;
 
     findReplace(mode, start_end_lines);
@@ -144,8 +147,8 @@ void srFlag(bool *srFlags, bool *argError, bool s_flag){
         return;
     }
 
-    if(s_flag) search_text = optarg;
-    else replace_text = optarg;
+    if(s_flag) sprintf(search_text, "%s", optarg);
+    else sprintf(replace_text, "%s", optarg);
 
 
     *srFlags = true;
@@ -282,52 +285,57 @@ void obtainFile(char *input, char *output){
  *      WILDCARD_INVALID if search text is invalid, otherwise 0;
 */
 int checkSearchTextForW(){
-    bool doubleAsteriskError = (search_text[0] == '*' && search_text[strlen(search_text) - 1] == '*'),
-            noAsteriskError = (search_text[0] != '*' && search_text[strlen(search_text) - 1] != '*');
+    bool doubleAsteriskError = (search_text[0] == '*' && search_text[searchLen - 1] == '*'),
+            noAsteriskError = (search_text[0] != '*' && search_text[searchLen - 1] != '*');
 
     if(doubleAsteriskError || noAsteriskError) return WILDCARD_INVALID;
     return 0;
 }
 
+void findReplace(int mode, int *start_end_lines){
+    char curr_line[MAX_LINE + 1];
+    int lineNum = 1;
+    while(fgets(curr_line, MAX_LINE, inputFile) != NULL){
+        if(start_end_lines[0] <= lineNum && start_end_lines[1] >= lineNum){
+            if(mode == 0) 
+                replace(curr_line);
+            else if(mode == 1){
+                search_text[searchLen - 1] = '\0';
+                prefixReplace(curr_line, search_text);
+            }
+            else
+                suffixReplace(curr_line, search_text + 1);
+        }
+        else 
+            fputs(curr_line, outputFile);
+        lineNum++;
+    }
+}
 
-void replace(char *curr_line, int searchLen){
+void replace(char *curr_line){
     if(strcmp(search_text, replace_text) == 0){
         fputs(curr_line, outputFile);
         return;
     }
 
-    while(1){
-        char *word_found = strstr(curr_line, search_text);
-        if(word_found == NULL){
-            fputs(curr_line, outputFile);
-            return;
-        }
-
+    char *word_found = strstr(curr_line, search_text);
+    while(word_found){
         int indexOfWord = (word_found - curr_line), lineLen = strlen(curr_line);
         
         fprintf(outputFile, "%.*s%s", indexOfWord, curr_line, replace_text);
 
         if(*(word_found + searchLen) == '\0') return;
         
-        char restOfLine[(lineLen - (searchLen + indexOfWord)) + 1];
-        strcpy(restOfLine, word_found + searchLen);
-        strcpy(curr_line, restOfLine);
+        getRemainingTexts(curr_line, word_found + searchLen, (lineLen - (searchLen + indexOfWord)) + 1);
+        word_found = strstr(curr_line, search_text);
     }
+    fputs(curr_line, outputFile);
 }
 
-int updateEndIndex(char *line, int lineLen, int endIndex){
-    while(endIndex < lineLen && isalnum(line[endIndex])) endIndex++;
-    return endIndex;
-}
 
-void prefixReplace(char *curr_line, char *prefix, int searchLen){
-    while(1){
-        char *prefix_found = strstr(curr_line, prefix);
-        if(prefix_found == NULL){
-            fputs(curr_line, outputFile);
-            return;
-        }
-
+void prefixReplace(char *curr_line, char *prefix){
+    char *prefix_found = strstr(curr_line, prefix);
+    while(prefix_found){
         int indexOfWord = prefix_found - curr_line, lineLen = strlen(curr_line), 
             endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
 
@@ -338,28 +346,48 @@ void prefixReplace(char *curr_line, char *prefix, int searchLen){
         
         if(*(curr_line + endOfWordIndex) == '\0') return;
         
-        char rest[(lineLen - endOfWordIndex) + 1];
-        strcpy(rest, curr_line + endOfWordIndex);
-        strcpy(curr_line, rest);
-    }       
+        getRemainingTexts(curr_line, curr_line + endOfWordIndex, (lineLen - endOfWordIndex) + 1);
+        prefix_found = strstr(curr_line, prefix);
+    }
+    fputs(curr_line, outputFile);
 }
 
 
-void findReplace(int mode, int *start_end_lines){
-    char curr_line[MAX_LINE + 1];
-    int lineNum = 1, searchLen = strlen(search_text);
-    while(fgets(curr_line, MAX_LINE, inputFile) != NULL){
-        if(start_end_lines[0] <= lineNum && start_end_lines[1] >= lineNum){
-            if(mode == 0) 
-                replace(curr_line, searchLen);
-            else if(mode == 1){
-                char prefix[searchLen];
-                snprintf(prefix, searchLen, "%s", search_text);
-                prefixReplace(curr_line, prefix, searchLen);
-            }
+void suffixReplace(char *curr_line, char *suffix){
+    char *suffix_found = strstr(curr_line, suffix);
+    while(suffix_found){
+        int indexOfWord = suffix_found - curr_line, lineLen = strlen(curr_line),
+            endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
+        
+        if(strncmp(suffix, curr_line + (endOfWordIndex - (searchLen - 1)), searchLen - 1) == 0){
+            int startOfWordIndex = updateStartIndex(curr_line, indexOfWord - 1);
+            fprintf(outputFile, "%.*s%s", startOfWordIndex + 1, curr_line, replace_text);
         }
-        else 
-            fputs(curr_line, outputFile);
-        lineNum++;
+        else fprintf(outputFile, "%.*s", endOfWordIndex, curr_line);
+
+        if(*(curr_line + endOfWordIndex) == '\0') return;
+
+        getRemainingTexts(curr_line, curr_line + endOfWordIndex, (lineLen - endOfWordIndex) + 1);
+        suffix_found = strstr(curr_line, suffix);
     }
+    fputs(curr_line, outputFile);
+}
+
+
+int updateEndIndex(char *line, int lineLen, int endIndex){
+    while(endIndex < lineLen && isalnum(line[endIndex])) endIndex++;
+    return endIndex;
+}
+
+
+int updateStartIndex(char *line, int startIndex){
+    while(startIndex >= 0 && isalnum(line[startIndex])) startIndex--;
+    return startIndex;
+}
+
+
+void getRemainingTexts(char *curr_line, char *startOfRemain, int sizeOfRemain){
+    char remain[sizeOfRemain];
+    strcpy(remain, startOfRemain);
+    strcpy(curr_line, remain);
 }
