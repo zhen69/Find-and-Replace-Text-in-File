@@ -1,7 +1,17 @@
+/**
+ * @file FindReplace.c
+ * 
+ * @brief 
+ *      Implemented a program that reads command line arguments, performs find/replace on the input file,
+ *      and prints the results in the output file.
+ * 
+ * @author Zhen Wei Liao
+ */
 #include "FindReplace.h"
-extern char *optarg;
 
+extern char *optarg;
 int searchLen;
+
 char search_text[MAX_TEXT_LEN + 1], replace_text[MAX_TEXT_LEN + 1];
 
 FILE *inputFile, *outputFile;
@@ -18,18 +28,7 @@ argErrors = {s_flag_arg, r_flag_arg, l_flag_r}
 */
 bool argErrors[] = {false, false, false, false};
 
-/**
- * @brief 
- * This program would perform find and replace on the input file 
- * and print the results in the indicated output file.
- * 
- * @param argc
- *      Integer indicating the number of command line arguments.
- * @param argv
- *      Array containing the input command line arguments.
- * @return
- *      0 if the program terminates successfully, otherwise a non-negative error code.
- */
+
 int main(int argc, char *argv[]){
     /*
     Required Arguments:
