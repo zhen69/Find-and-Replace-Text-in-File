@@ -7,7 +7,7 @@ char search_text[MAX_TEXT_LEN + 1], replace_text[MAX_TEXT_LEN + 1];
 FILE *inputFile, *outputFile;
 
 /*
-checkFlags checks if a flag is entered by the user.
+checkFlags checks if the user enters a specific flag.
 checkFlags = {s flag, r flag, l flag, w flag, dublicate flag}
 */
 bool checkFlags[] = {false, false, false, false, false};
@@ -28,11 +28,11 @@ bool argErrors[] = {false, false, false, false};
  * @param argv
  *      Array containing the input command line arguments.
  * @return
- *      0 if program terminates successfully, other a non-negative error code.
+ *      0 if the program terminates successfully, otherwise a non-negative error code.
  */
 int main(int argc, char *argv[]){
     /*
-    Requried Arguments:
+    Required Arguments:
     - Program name
     - s flag
     - s flag argument
@@ -117,13 +117,13 @@ void scanArgs(const int argc, char* const* argv, int *start_end_lines){
 
 /**
  * @brief
- *      Indicates a s/r flag is scanned or a duplicate flag have occurred.
+ *      Indicates a s/r flag is scanned or a duplicate flag has occurred.
  * 
  * @param srFlags
  *      Pointer that points a boolean value that indicates whether a s/r flag is scanned.
  * 
  * @param argError
- *      Pointer that points a boolean value that indicates wheteher a argument error is encountered.
+ *      Pointer that points to a boolean value that indicates whether an argument error is encountered.
  * 
  * @param s_flag 
  *      Boolean value indicating whether the function is dealing with a s flag.
@@ -159,10 +159,10 @@ void srFlag(bool *srFlags, bool *argError, bool s_flag){
 
 /**
  * @brief 
- *      Indicates a l flag is scanned or a duplicate flag have occurred. 
+ *      Indicates a l flag is scanned or a duplicate flag has occurred. 
  * 
  * @note
- *      If no duplicate, it initializes the starting/ending line numbers.
+ *      If there is no duplicate, it initializes the starting/ending line numbers.
  * 
  * @param start_end_lines
  *      Array containing the starting/ending line numbers.
@@ -177,10 +177,10 @@ void lFlag(int *start_end_lines){
     int start, end;
 
     /*
-    optarg for the l flag must not start with '-', must includes both starting and ending line numbers 
-    where start <= end, and must contains a comma sperating the line numbers.
+    optarg for the l flag must not start with '-' and must indicate both starting and ending line numbers (separated by a comma)
+    where start <= end.
     */
-    if(optarg == NULL || optarg[0] == '-' || strchr(optarg, ',') == NULL
+    if(!optarg || optarg[0] == '-' || !strchr(optarg, ',')
         || !(startLine = strtok(optarg, ",")) || !(endLine = strtok(NULL, ","))
         || (start = strtol(startLine, NULL, 10)) > (end = strtol(endLine, NULL, 10))){
 
@@ -196,7 +196,7 @@ void lFlag(int *start_end_lines){
 
 /**
  * @brief 
- *      Indicates a w flag is scanned or a duplicate flag have occurred.
+ *      Indicates a w flag is scanned or a duplicate flag has occurred.
  */
 void wFlag(){
     if(checkFlags[3]) checkFlags[4] = true;
@@ -206,7 +206,7 @@ void wFlag(){
 
 /**
  * @brief 
- *      Returns an error code based on order of precedence.
+ *      Returns an error code based on the order of precedence.
  * 
  * @param input_file 
  *      String indicating the input file.
@@ -219,7 +219,7 @@ void wFlag(){
  */
 int checkErrors(char *input_file, char *output_file){
     /*
-    Error precedence from from high to low:
+    Error precedence from high to low:
         1. DUPLICATE_ARGUMENT 
         2. INPUT_FILE_MISSING
         3. OUTPUT_FILE_UNWRITABLE
@@ -252,8 +252,8 @@ int checkErrors(char *input_file, char *output_file){
  *      String indicating the output file.
  * 
  * @note
- *      When both inputFile and outputFile points to the same file, inputFile would be modified to point to 
- *      a temporary file that contains the same info as the orginal pointed file.
+ *      When both inputFile and outputFile point to the same file, inputFile would be modified to point to 
+ *      a temporary file that contains the same info as the original pointed file.
 */
 void obtainFiles(char *input, char *output){
     inputFile = fopen(input, "r");
@@ -274,13 +274,13 @@ void obtainFiles(char *input, char *output){
 
 /**
  * @brief
- *      Checks if the search text is appropriate for the wildcard find/replace function 
+ *      Checks if the search text is appropriate for the prefix/suffix find and replace function 
  *      to be performed.
  * 
  * @note
- *      Prefix search: search text must ends with a '*'
+ *      Prefix search: search text must end with a '*'
  * @note
- *      Suffix search: search text must starts with a '*'
+ *      Suffix search: search text must start with a '*'
  * 
  * @return
  *      WILDCARD_INVALID if search text is invalid, otherwise 0;
@@ -294,16 +294,17 @@ int checkSearchTextForW(){
     return 0;
 }
 
+
 /**
  * @brief 
  * Reads the inputFile line by line and performs the corresponding find/replace function
  * based on the input mode.
  * 
  * @param mode 
- *      Integer indicating which search/replace function should be perform.
+ *      Integer indicating which search/replace function should be performed.
  * 
  * @param start_end_lines 
- *      Array containing the starting/ending line numbers which indicates the range of the
+ *      Array containing the starting/ending line numbers which indicate the range of the
  *      search/replace function.
  */
 void findReplace(int mode, int *start_end_lines){
@@ -349,7 +350,7 @@ void replace(char *curr_line){
         
         /*
         Print all texts before search_text + replace_text.
-        Index of search_text represents the amount of characters that are before search_text.
+        The index of search_text represents the number of characters that are before search_text.
         */
         fprintf(outputFile, "%.*s%s", indexOfWord, curr_line, replace_text);
 
@@ -381,7 +382,7 @@ void prefixReplace(char *curr_line, char *prefix){
             endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
 
 
-        //Checks if the prefix found is a true prefix, meaning it must be at the beginning of a word.
+        //Check if the prefix found is a true prefix, meaning it must be at the beginning of a word.
         if(indexOfWord == 0 || !isalnum(curr_line[indexOfWord - 1]))
             fprintf(outputFile, "%.*s%s", indexOfWord, curr_line, replace_text);
         else
@@ -414,7 +415,7 @@ void suffixReplace(char *curr_line, char *suffix){
             endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
         
         
-        //Checks if the suffix found is a true suffix, meaning it must be at the end of the word.
+        //Check if the suffix found is a true suffix, meaning it must be at the end of the word.
         if(!strncmp(suffix, curr_line + (endOfWordIndex - (searchLen - 1)), searchLen - 1)){
             int startOfWordIndex = updateStartIndex(curr_line, indexOfWord - 1);
             fprintf(outputFile, "%.*s%s", startOfWordIndex + 1, curr_line, replace_text);
@@ -433,7 +434,7 @@ void suffixReplace(char *curr_line, char *suffix){
 /**
  * @brief 
  *      Obtains the index that indicates the ending of a word.
- *      For example, ending index for "apple." is 5.
+ *      For example, the ending index for "apple." is 5.
  * 
  * @param curr_line
  *      Line being read by the program.
