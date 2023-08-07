@@ -41,8 +41,7 @@ int main(int argc, char *argv[]){
     - input file
     - output file
     */
-    if(argc < 7)
-        return MISSING_ARGUMENT;
+    if(argc < 7) return MISSING_ARGUMENT;
     
     /*
     start_end_lines indicates the range of the replacement process
@@ -63,7 +62,7 @@ int main(int argc, char *argv[]){
 
     mode = 1: replaces all texts with a prefix of search_text.
 
-    mode = 2: replaces all texts with a suffix of search_text.
+    mode >= 2: replaces all texts with a suffix of search_text.
     */
     int mode = 0;
     if(search_text[searchLen - 1] == '*') mode = 1;
@@ -82,6 +81,7 @@ int main(int argc, char *argv[]){
  * 
  * @param argc 
  *      Integer indicating the number of command line arguments.
+ * 
  * @param argv 
  *      Array storing the command line arguments.
  * 
@@ -120,14 +120,16 @@ void scanArgs(const int argc, char* const* argv, int *start_end_lines){
  *      Indicates a s/r flag is scanned or a duplicate flag have occurred.
  * 
  * @param srFlags
- *      A pointer that points a boolean value that indicates whether a s/r flag is scanned.
+ *      Pointer that points a boolean value that indicates whether a s/r flag is scanned.
+ * 
  * @param argError
- *      A pointer that points a boolean value that indicates wheteher a argument error is encountered.
+ *      Pointer that points a boolean value that indicates wheteher a argument error is encountered.
+ * 
  * @param s_flag 
- *      A boolean value indicating whether the function is dealing with a s flag.
+ *      Boolean value indicating whether the function is dealing with a s flag.
  * 
  * @note
- *      It initializes search and replacement texts if no error is encountered.
+ *      Function initializes search and replacement texts if no error is encountered.
  */
 void srFlag(bool *srFlags, bool *argError, bool s_flag){
     if(*srFlags){
@@ -142,7 +144,7 @@ void srFlag(bool *srFlags, bool *argError, bool s_flag){
         return;
     }
 
-    if(optarg == NULL || optarg[0] == '-'){
+    if(!optarg || optarg[0] == '-'){
         *argError = true;
         return;
     }
@@ -163,7 +165,7 @@ void srFlag(bool *srFlags, bool *argError, bool s_flag){
  *      If no duplicate, it initializes the starting/ending line numbers.
  * 
  * @param start_end_lines
- *      Array that contains the starting/ending line numbers.
+ *      Array containing the starting/ending line numbers.
  */
 void lFlag(int *start_end_lines){
     if(checkFlags[2]){
@@ -207,12 +209,13 @@ void wFlag(){
  *      Returns an error code based on order of precedence.
  * 
  * @param input_file 
- *      A string indicating the input file.
+ *      String indicating the input file.
+ * 
  * @param output_file 
- *      A string indicating the output file.
+ *      String indicating the output file.
  * 
  * @return
- *      An error code if an error occurs, otherwise 0.
+ *      Error code if an error is encountered, otherwise 0.
  */
 int checkErrors(char *input_file, char *output_file){
     /*
@@ -227,7 +230,7 @@ int checkErrors(char *input_file, char *output_file){
      */
     if(checkFlags[4]) return DUPLICATE_ARGUMENT;
 
-    obtainFile(input_file, output_file);
+    obtainFiles(input_file, output_file);
 
     if(!inputFile) return INPUT_FILE_MISSING;
     if(!outputFile) return OUTPUT_FILE_UNWRITABLE;
@@ -243,19 +246,16 @@ int checkErrors(char *input_file, char *output_file){
  * Opens the files indicated by input and output.
  * 
  * @param input
- *      A string indicating the input file.
+ *      String indicating the input file.
  * 
  * @param output
- *      A string indicating the output file.
- * 
- * @warning
- *      Must declare global variables inputFile and outputFile before using this fucntion.
+ *      String indicating the output file.
  * 
  * @note
  *      When both inputFile and outputFile points to the same file, inputFile would be modified to point to 
  *      a temporary file that contains the same info as the orginal pointed file.
 */
-void obtainFile(char *input, char *output){
+void obtainFiles(char *input, char *output){
     inputFile = fopen(input, "r");
 
     if(!strcmp(input, output)){
@@ -274,7 +274,8 @@ void obtainFile(char *input, char *output){
 
 /**
  * @brief
- *      Checks if the search text is appropriate for the wildcard search/replace to be performed.
+ *      Checks if the search text is appropriate for the wildcard find/replace function 
+ *      to be performed.
  * 
  * @note
  *      Prefix search: search text must ends with a '*'
@@ -285,6 +286,7 @@ void obtainFile(char *input, char *output){
  *      WILDCARD_INVALID if search text is invalid, otherwise 0;
 */
 int checkSearchTextForW(){
+    //search_text like *apple* or apple are not allowed when a w flag is presented
     bool doubleAsteriskError = (search_text[0] == '*' && search_text[searchLen - 1] == '*'),
             noAsteriskError = (search_text[0] != '*' && search_text[searchLen - 1] != '*');
 
@@ -292,10 +294,22 @@ int checkSearchTextForW(){
     return 0;
 }
 
+/**
+ * @brief 
+ * Reads the inputFile line by line and performs the corresponding find/replace function
+ * based on the input mode.
+ * 
+ * @param mode 
+ *      Integer indicating which search/replace function should be perform.
+ * 
+ * @param start_end_lines 
+ *      Array containing the starting/ending line numbers which indicates the range of the
+ *      search/replace function.
+ */
 void findReplace(int mode, int *start_end_lines){
     char curr_line[MAX_LINE + 1];
     int lineNum = 1;
-    while(fgets(curr_line, MAX_LINE, inputFile) != NULL){
+    while(fgets(curr_line, MAX_LINE, inputFile)){
         if(start_end_lines[0] <= lineNum && start_end_lines[1] >= lineNum){
             if(mode == 0) 
                 replace(curr_line);
@@ -312,33 +326,62 @@ void findReplace(int mode, int *start_end_lines){
     }
 }
 
+
+/**
+ * @brief 
+ * Performs the normal find/replace function, where all existence of search_text would be replace 
+ * by replace_text.
+ * 
+ * @param curr_line
+ *      Line being read by the program.
+ */
 void replace(char *curr_line){
-    if(strcmp(search_text, replace_text) == 0){
+    //If search_text == replace_text, print the original line in the outputFile.
+    if(!strcmp(search_text, replace_text)){
         fputs(curr_line, outputFile);
         return;
     }
 
-    char *word_found = strstr(curr_line, search_text);
+    char *word_found = strstr(curr_line, search_text); //Find the first occurrence of search_text.
+    //Loop until all search_line are replaced.
     while(word_found){
         int indexOfWord = (word_found - curr_line), lineLen = strlen(curr_line);
         
+        /*
+        Print all texts before search_text + replace_text.
+        Index of search_text represents the amount of characters that are before search_text.
+        */
         fprintf(outputFile, "%.*s%s", indexOfWord, curr_line, replace_text);
 
+        //when search_text is the last word in curr_line, stop the function.
         if(*(word_found + searchLen) == '\0') return;
         
-        getRemainingTexts(curr_line, word_found + searchLen, (lineLen - (searchLen + indexOfWord)) + 1);
+        getRemainingTexts(curr_line, word_found + searchLen, lineLen + 1);
         word_found = strstr(curr_line, search_text);
     }
-    fputs(curr_line, outputFile);
+    fputs(curr_line, outputFile); //Prints all the leftover texts.
 }
 
 
+/**
+ * @brief
+ * Performs the prefix find/replace function, where all words with the input prefix would be
+ * replace by replace_text.
+ * 
+ * @param curr_line
+ *      Line being read by the program.
+ * 
+ * @param prefix
+ *      Prefix of a word.
+ */
 void prefixReplace(char *curr_line, char *prefix){
     char *prefix_found = strstr(curr_line, prefix);
     while(prefix_found){
         int indexOfWord = prefix_found - curr_line, lineLen = strlen(curr_line), 
             endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
 
+
+        //Checks if the prefix found is a true prefix, meaning it must be at the beginning of a word.
         if(indexOfWord == 0 || !isalnum(curr_line[indexOfWord - 1]))
             fprintf(outputFile, "%.*s%s", indexOfWord, curr_line, replace_text);
         else
@@ -346,20 +389,33 @@ void prefixReplace(char *curr_line, char *prefix){
         
         if(*(curr_line + endOfWordIndex) == '\0') return;
         
-        getRemainingTexts(curr_line, curr_line + endOfWordIndex, (lineLen - endOfWordIndex) + 1);
+        getRemainingTexts(curr_line, curr_line + endOfWordIndex, lineLen + 1);
         prefix_found = strstr(curr_line, prefix);
     }
     fputs(curr_line, outputFile);
 }
 
 
+/**
+ * @brief
+ * Performs the suffix find/replace function, where all words with the input suffix would be replace
+ * by replace_text.
+ * 
+ * @param curr_line
+ *      Line being read by the program.
+ * 
+ * @param suffix 
+ *      Suffix of a word.
+ */
 void suffixReplace(char *curr_line, char *suffix){
     char *suffix_found = strstr(curr_line, suffix);
     while(suffix_found){
         int indexOfWord = suffix_found - curr_line, lineLen = strlen(curr_line),
             endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
         
-        if(strncmp(suffix, curr_line + (endOfWordIndex - (searchLen - 1)), searchLen - 1) == 0){
+        
+        //Checks if the suffix found is a true suffix, meaning it must be at the end of the word.
+        if(!strncmp(suffix, curr_line + (endOfWordIndex - (searchLen - 1)), searchLen - 1)){
             int startOfWordIndex = updateStartIndex(curr_line, indexOfWord - 1);
             fprintf(outputFile, "%.*s%s", startOfWordIndex + 1, curr_line, replace_text);
         }
@@ -367,27 +423,72 @@ void suffixReplace(char *curr_line, char *suffix){
 
         if(*(curr_line + endOfWordIndex) == '\0') return;
 
-        getRemainingTexts(curr_line, curr_line + endOfWordIndex, (lineLen - endOfWordIndex) + 1);
+        getRemainingTexts(curr_line, curr_line + endOfWordIndex, lineLen + 1);
         suffix_found = strstr(curr_line, suffix);
     }
     fputs(curr_line, outputFile);
 }
 
 
-int updateEndIndex(char *line, int lineLen, int endIndex){
-    while(endIndex < lineLen && isalnum(line[endIndex])) endIndex++;
+/**
+ * @brief 
+ *      Obtains the index that indicates the ending of a word.
+ *      For example, ending index for "apple." is 5.
+ * 
+ * @param curr_line
+ *      Line being read by the program.
+ * 
+ * @param lineLen
+ *      Length or number of characters in the current line.
+ * 
+ * @param endIndex
+ *      Initial ending index.
+ * 
+ * @return
+ *      Updated ending index.
+ */
+int updateEndIndex(char *curr_line, int lineLen, int endIndex){
+    while(endIndex < lineLen && isalnum(curr_line[endIndex])) endIndex++;
     return endIndex;
 }
 
 
-int updateStartIndex(char *line, int startIndex){
-    while(startIndex >= 0 && isalnum(line[startIndex])) startIndex--;
+/**
+ * @brief 
+ *      Obtains the index that indicates the beginning of a word.
+ *      For example, starting index for ". Apple" is 1.
+ * 
+ * @param curr_line 
+ *      Line being read by the program.
+ * 
+ * @param startIndex
+ *      Initial staring index.
+ * 
+ * @return
+ *      Updated starting index.
+ */
+int updateStartIndex(char *curr_line, int startIndex){
+    while(startIndex >= 0 && isalnum(curr_line[startIndex])) startIndex--;
     return startIndex;
 }
 
 
-void getRemainingTexts(char *curr_line, char *startOfRemain, int sizeOfRemain){
-    char remain[sizeOfRemain];
+/**
+ * @brief
+ * Updates curr_line with all the characters after search_text.
+ * 
+ * @param curr_line 
+ *      Line being read by the program.
+ * 
+ * @param startOfRemain
+ *      Starting index of the remaining texts.
+ * 
+ * @param lineLen
+ *      Length or number of characters in the current line.
+ *      
+ */
+void getRemainingTexts(char *curr_line, char *startOfRemain, int lineLen){
+    char remain[lineLen];
     strcpy(remain, startOfRemain);
     strcpy(curr_line, remain);
 }
