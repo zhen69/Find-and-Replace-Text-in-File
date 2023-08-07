@@ -21,14 +21,17 @@
 #define WILDCARD_INVALID 7
 #define DUPLICATE_ARGUMENT 8
 
-void getRemainingTexts(char *curr_line, char *startOfRemain, int sizeOfRemain);
+
+//Functions declarations
+
+void getRemainingTexts(char *curr_line, char *startOfRemain, int lineLen);
 void suffixReplace(char *curr_line, char *suffix);
 void prefixReplace(char *curr_line, char *prefix);
-int updateStartIndex(char *line, int startIndex);
-int updateEndIndex(char *line, int lineLen, int endIndex);
+int updateStartIndex(char *curr_line, int startIndex);
+int updateEndIndex(char *curr_line, int lineLen, int endIndex);
 void replace(char *curr_line);
 void findReplace(int mode, int *start_end_lines);
-void obtainFile(char *input, char *output);
+void obtainFiles(char *input, char *output);
 int checkSearchTextForW();
 int checkErrors(char *input_file, char *output_file);
 void srFlag(bool *flags, bool *argError, bool s_flag);
