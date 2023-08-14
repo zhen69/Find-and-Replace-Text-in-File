@@ -64,7 +64,7 @@ In the terminal, type <code>make</code> and <code>make test</code> to run the te
 In the terminal, type <code>gcc [source file]</code>. By default, this will produce an executable file named a.out (Linux) or a.exe (Windows). If you want the executable file to have a custom name, type <code>gcc -o [name of executable] [source file]</code>. After compiling the program, run the executable file by entering <code>./[executable file] [command line arguments for running the program]</code>.
 
 <h2>Author</h2>
-<strong>Zhen Wei Liao</strong> - <a href="www.linkedin.com/in/zhenwei-liao-148baa273">@Zhen</a><br>
+<strong>Zhen Wei Liao</strong> - <a href="https://www.linkedin.com/in/zhenwei-liao-148baa273">@Zhen</a><br>
 Built the main program and parts of FindReplace.h/unit_tests.c
 
 <h3>Contributor:</h3>
