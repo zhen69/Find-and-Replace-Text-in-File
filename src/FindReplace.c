@@ -345,7 +345,8 @@ void replace(char *curr_line){
     char *word_found = strstr(curr_line, search_text); //Find the first occurrence of search_text.
     //Loop until all search_line are replaced.
     while(word_found){
-        int indexOfWord = (word_found - curr_line), lineLen = strlen(curr_line);
+        int indexOfWord = (word_found - curr_line);
+        size_t lineLen = strlen(curr_line);
         
         /*
         Print all texts before search_text + replace_text.
@@ -377,8 +378,8 @@ void replace(char *curr_line){
 void prefixReplace(char *curr_line, char *prefix){
     char *prefix_found = strstr(curr_line, prefix);
     while(prefix_found){
-        int indexOfWord = prefix_found - curr_line, lineLen = strlen(curr_line), 
-            endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
+        int indexOfWord = prefix_found - curr_line, endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
+        size_t lineLen = strlen(curr_line);
 
 
         //Check if the prefix found is a true prefix, meaning it must be at the beginning of a word.
@@ -410,8 +411,8 @@ void prefixReplace(char *curr_line, char *prefix){
 void suffixReplace(char *curr_line, char *suffix){
     char *suffix_found = strstr(curr_line, suffix);
     while(suffix_found){
-        int indexOfWord = suffix_found - curr_line, lineLen = strlen(curr_line),
-            endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
+        int indexOfWord = suffix_found - curr_line, endOfWordIndex = updateEndIndex(curr_line, lineLen, indexOfWord + searchLen - 1);
+        size_t lineLen = strlen(curr_line);
         
         
         //Check if the suffix found is a true suffix, meaning it must be at the end of the word.
