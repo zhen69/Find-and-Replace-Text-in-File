@@ -67,9 +67,5 @@ In the terminal, type <code>gcc [source file]</code>. By default, this will prod
 <strong>Zhen Wei Liao</strong> - <a href="https://www.linkedin.com/in/zhenwei-liao-148baa273">@Zhen</a><br>
 Built the main program and parts of FindReplace.h/unit_tests.c
 
-<h3>Contributor:</h3>
-<strong>Professor Kevin McDonnell</strong> - <a href="https://www.cs.stonybrook.edu/people/faculty/KevinMcDonnell">@KevinMcDonnell</a><br>
-Created the makeFile, unit_tests.h, and parts of unit_tests.c/FindReplace.h
-
 <h2>License</h2>
 This project is under the MIT License. <br>Please check the LICENSE.md file for more information.
